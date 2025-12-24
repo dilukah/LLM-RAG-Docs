@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env
+
+# Streamlit generated files
+.streamlit/
+
+# Persistent vector database
+.chroma/
+
+# Sources
+src/
+
+# Generated documentation
+docs_generated/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

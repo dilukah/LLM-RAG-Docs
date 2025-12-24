@@ -1,0 +1,5 @@
+CPP_DIR = "src/cpp"
+QML_DIR = "src/qml"
+PERSIST_DIR = ".chroma"
+COLLECTION_NAME = "steps"
+DOCS_HTML_DIR = "docs_generated/html"
