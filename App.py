@@ -7,6 +7,7 @@ from indexing import build_vectorstore
 from docs_export import export_html
 from rag import get_llm
 from prompts import USER_DOC_PROMPT, DEV_DOC_PROMPT, RAG_QA_PROMPT
+from batch_export import export_all_steps
 
 st.set_page_config(layout="wide")
 st.title("📘 Documentation Generator")
@@ -63,3 +64,7 @@ if st.button("Get Answer") and query:
         for d in docs:
             st.markdown(f"**{d.metadata['step']}** — {d.metadata['source']}")
             st.code(d.page_content[:600])
+
+if st.sidebar.button("📦 Export ALL Docs"):
+    export_all_steps(st.session_state.registry, st.session_state.llm)
+    st.sidebar.success("All documentation exported")
