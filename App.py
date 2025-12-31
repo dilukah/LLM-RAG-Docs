@@ -8,9 +8,10 @@ from docs_export import export_html
 from rag import get_llm
 from prompts import USER_DOC_PROMPT, DEV_DOC_PROMPT, RAG_QA_PROMPT
 from batch_export import export_all_steps
+import re
 
 st.set_page_config(layout="wide")
-st.title("📘 Documentation Generator")
+st.title("📘 AI Documentation Generator")
 
 if "registry" not in st.session_state:
     cpp_docs = load_cpp_documents(CPP_DIR)
@@ -24,24 +25,80 @@ if "registry" not in st.session_state:
     st.session_state.llm = get_llm()
 
 step_names = sorted(st.session_state.registry.keys())
-selected = st.sidebar.selectbox("Select Step", step_names)
+#selected = st.sidebar.selectbox("Select Module", step_names)
+#step = st.session_state.registry[selected]
+
+def display_name(name: str) -> str:
+    # Remove trailing 'Step' only
+    name = re.sub(r'Step$', '', name)
+
+    # Split CamelCase / PascalCase into words
+    name = re.sub(r'(?<!^)(?=[A-Z])', ' ', name)
+
+    return name.strip()
+
+
+display_to_key = {display_name(k): k for k in step_names}
+selected = st.sidebar.selectbox(
+    "Select Module",
+    step_names,
+    format_func=display_name
+)
 step = st.session_state.registry[selected]
+#step = st.session_state.registry[display_to_key[selected_display]]
 
-if st.button("📄 Generate User Documentation"):
-    context = build_step_context(step)
-    user_doc = st.session_state.llm.invoke(
-        USER_DOC_PROMPT.format(context=context)
-    )
-    st.markdown(user_doc)
-    export_html(selected, user_doc, "User")
+with st.expander("Show Source Files"):
+    st.subheader("C++ Files")
+    for doc in step.cpp_docs:
+        st.markdown(f"- `{doc.metadata['path']}`")
 
-if st.button("🛠 Generate Developer Documentation"):
-    context = build_step_context(step)
-    dev_doc = st.session_state.llm.invoke(
-        DEV_DOC_PROMPT.format(context=context)
+    st.subheader("QML Files")
+    for doc in step.qml_docs:
+        st.markdown(f"- `{doc.metadata['path']}`")
+
+def generate_editable_doc(step_name: str, prompt_template: str, doc_type: str):
+    """
+    Generates or regenerates the doc and shows an editable text area.
+    Stores content in st.session_state[<step>_<doc_type>_doc].
+    """
+    key = f"{step_name}_{doc_type}_doc"
+
+    # Regenerate button
+    if st.button(f"🔄 Generate {doc_type} Documentation", key=f"regen_{key}"):
+        context = build_step_context(step)
+        st.session_state[key] = st.session_state.llm.invoke(prompt_template.format(context=context))
+
+    # If not yet generated, generate initially
+    if key not in st.session_state:
+        context = build_step_context(step)
+        st.session_state[key] = st.session_state.llm.invoke(prompt_template.format(context=context))
+
+    # Editable area
+    st.session_state[key] = st.text_area(
+        f"Edit {doc_type} Documentation before export:",
+        value=st.session_state[key],
+        height=400,
+        key=f"textarea_{key}"
     )
-    st.markdown(dev_doc)
-    export_html(selected, dev_doc, "Developer")
+
+    # Optional preview
+    with st.expander("Preview", expanded=False):
+        st.markdown(st.session_state[key])
+
+col1, col2 = st.columns([1, 1])
+
+
+with col1:
+    generate_editable_doc(selected, USER_DOC_PROMPT, "User")
+    if st.button("💾 Save & Export User Doc"):
+        path = export_html(selected, st.session_state[f"{selected}_User_doc"], "User")
+        st.success(f"User doc exported → {path}")
+
+with col2:
+    generate_editable_doc(selected, DEV_DOC_PROMPT, "Developer")
+    if st.button("💾 Save & Export Developer Doc"):
+        path = export_html(selected, st.session_state[f"{selected}_Developer_doc"], "Developer")
+        st.success(f"Developer doc exported → {path}")
 
 
     st.divider()

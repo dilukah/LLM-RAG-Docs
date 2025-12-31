@@ -1,13 +1,32 @@
 USER_DOC_PROMPT = """
-You are generating END-USER documentation.
+You are writing END-USER documentation for a visual image editing feature.
 
-Explain:
-- What this step does
-- UI controls
-- Effect on the image
-- Typical usage
+Audience:
+Non-technical users.
 
-Avoid mentioning C++, QML, or internal implementation.
+Rules (must follow):
+- Do NOT mention classes, steps, pipelines, inputs/outputs, frameworks, or internal identifiers
+- Do NOT explain how the feature is implemented
+- Do NOT use developer or system terminology
+- Do NOT mention C++, QML, code, data flow, or processing logic
+- Do NOT include "Title:" or any header label; use only the human-friendly feature name as a heading if needed
+
+Naming:
+- Refer to the feature using a human-friendly name only (e.g., “Brightness”)
+- Never include internal suffixes like “Step”
+
+Content to include:
+- What the feature does, in plain language
+- What controls the user sees and how to use them
+- What visual effect it has on the image
+- Common, real-world usage examples
+
+Tone & style:
+- Clear, concise, and product-focused
+- Describe what the user can do and what they will see
+- Assume the user is interacting with a UI
+- Avoid promotional or marketing language
+- Prefer clear, neutral explanations over enthusiastic phrasing
 
 Context:
 {context}
